@@ -1,7 +1,7 @@
 package goctapus
 
 import (
-	"database/sql"
+	"gopkg.in/mgo.v2"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo"
@@ -15,7 +15,7 @@ var dbPort string
 var dbUser string
 var dbPass string
 
-var Databases map[string]*sql.DB
+var Database map[string]*mgo.Session
 
 var e *echo.Echo
 
@@ -24,8 +24,8 @@ func getArgs(args []string) (string, string, string, string, string) {
 	// Set default configuration values
 	appPort := "8000"
 	dbHost := "localhost"
-	dbPort := "3306"
-	dbUser := "root"
+	dbPort := "27017"
+	dbUser := ""
 	dbPass := ""
 
 	switch argsCount := len(args); argsCount {
@@ -94,7 +94,7 @@ func getArgs(args []string) (string, string, string, string, string) {
 	return appPort, dbHost, dbPort, dbUser, dbPass
 }
 
-func Init(args []string, logLevel string) {
+func Init(args []string, logLevel string, database string) {
 
 	InitLogger(logLevel)
 
@@ -110,7 +110,8 @@ func Init(args []string, logLevel string) {
 		"dbPass":  dbPass,
 	}).Debug("Current server configuration:")
 
-	Databases = make(map[string]*sql.DB)
+	// Databases = make(map[string]*sql.DB)
+	ConnectDB(dbHost, dbPort, database, dbUser, dbPass)
 
 	e = echo.New()
 

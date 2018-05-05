@@ -2,10 +2,12 @@ package goctapus
 
 import (
 	"database/sql"
-	"io/ioutil"
-	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	mgo "gopkg.in/mgo.v2"
+
+	Log "github.com/sirupsen/logrus"
 )
 
 // InitDB initializes the connection to the Database
@@ -25,43 +27,22 @@ func InitDB(dbString string) *sql.DB {
 	return db
 }
 
-func ConnectDB(db_name string) {
+func ConnectDB(host string, port string, database string, user string, pass string) {
 
-	// Connects to a database and stores the connection to an object in the Databases Map
-	Databases[db_name] = InitDB(dbUser + ":" + dbPass + "@tcp(" + dbHost + ":" + dbPort + ")/?charset=utf8")
-
-	// Run the Database creation and USE queries
-	sql := `CREATE DATABASE IF NOT EXISTS ` + db_name + `;
-			USE ` + db_name + `;`
-	executeSQLString(Databases[db_name], sql)
-
-}
-
-func executeSQLString(db *sql.DB, script string) {
-	// split it into seperate queries
-	queries := strings.Split(script, ";")
-
-	// and execute them one by one
-	// except for the last one which is expty because of the split
-	for _, query := range queries[0 : len(queries)-1] {
-		_, err := db.Exec(query)
-		if err != nil {
-			panic(err)
-		}
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{host + ":" + port},
+		Timeout:  60 * time.Second,
+		Database: database,
+		Username: user,
+		Password: pass,
 	}
-}
 
-func executeSQLFile(db *sql.DB, pathtofile string) {
-	file, err := ioutil.ReadFile(pathtofile)
-
+	Database, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
-		panic(err)
+		Log.Fatal("CreateSession: %s\n", err)
 	}
 
-	executeSQLString(db, string(file))
-}
+	Database.SetMode(mgo.Monotonic, true)
 
-// Migrate xecutes an SQL File against a specific DB
-func Migrate(db *sql.DB, filename string) {
-	executeSQLFile(db, filename)
+	Log.WithField("Database", Database).Debug("Succesfully connected to MongoDB")
 }
