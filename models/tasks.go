@@ -1,86 +1,64 @@
 package models
 
 import (
-	"database/sql"
+	"log"
 
+	"github.com/Kamaropoulos/goctapus-mongo/core"
 	_ "github.com/go-sql-driver/mysql"
+	"gopkg.in/mgo.v2/bson"
+
+	Log "github.com/sirupsen/logrus"
 )
 
 // Task is a struct containing Task data
 type Task struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID   bson.ObjectId `json:"id" bson:"_id"`
+	Name string        `json:"name" bson:"name"`
 }
 
 // TaskCollection is collection of Tasks
 type TaskCollection struct {
-	Tasks []Task `json:"items"`
+	Tasks []Task `json:"items" bson:"items"`
 }
 
 // GetTasks from the DB
-func GetTasks(db *sql.DB) TaskCollection {
-	sql := "SELECT * FROM tasks"
-	rows, err := db.Query(sql)
-	// Exit if the SQL doesn't work for some reason
+func GetTasks() TaskCollection {
+	database := goctapus.ConnectDB(goctapus.DBHost)
+	defer database.Close()
+	c := database.DB("goapp").C("tasks")
+	result := TaskCollection{}
+	err := c.Find(nil).All(&result.Tasks)
+
 	if err != nil {
 		panic(err)
 	}
-	// make sure to cleanup when the program exits
-	defer rows.Close()
 
-	result := TaskCollection{}
-	for rows.Next() {
-		task := Task{}
-		err2 := rows.Scan(&task.ID, &task.Name)
-		// Exit if we get an error
-		if err2 != nil {
-			panic(err2)
-		}
-		result.Tasks = append(result.Tasks, task)
-	}
 	return result
 }
 
 // PutTask into DB
-func PutTask(db *sql.DB, name string) (int64, error) {
-	sql := "INSERT INTO tasks(name) VALUES(?)"
-
-	// Create a prepared SQL statement
-	stmt, err := db.Prepare(sql)
-	// Exit if we get an error
+func PutTask(name string) (string, error) {
+	database := goctapus.ConnectDB(goctapus.DBHost)
+	defer database.Close()
+	c := database.DB("goapp").C("tasks")
+	task := Task{ID: bson.NewObjectId(), Name: name}
+	err := c.Insert(&task)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	// Make sure to cleanup after the program exits
-	defer stmt.Close()
-
-	// Replace the '?' in our prepared statement with 'name'
-	result, err2 := stmt.Exec(name)
-	// Exit if we get an error
-	if err2 != nil {
-		panic(err2)
-	}
-
-	return result.LastInsertId()
+	return task.ID.Hex(), nil
 }
 
 // DeleteTask from DB
-func DeleteTask(db *sql.DB, id int) (int64, error) {
-	sql := "DELETE FROM tasks WHERE id = ?"
+func DeleteTask(id string) (int64, error) {
+	database := goctapus.ConnectDB(goctapus.DBHost)
+	defer database.Close()
+	c := database.DB("goapp").C("tasks")
+	err := c.RemoveId(bson.ObjectIdHex(id))
 
-	// Create a prepared SQL statement
-	stmt, err := db.Prepare(sql)
-	// Exit if we get an error
 	if err != nil {
-		panic(err)
+		Log.Warn(err)
 	}
 
-	// Replace the '?' in our prepared statement with 'id'
-	result, err2 := stmt.Exec(id)
-	// Exit if we get an error
-	if err2 != nil {
-		panic(err2)
-	}
-
-	return result.RowsAffected()
+	return 0, nil
 }
