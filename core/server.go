@@ -9,31 +9,31 @@ import (
 	Log "github.com/sirupsen/logrus"
 )
 
-var appPort string
-var dbHost string
-var dbPort string
-var dbUser string
-var dbPass string
+var AppPort string
+var DBHost string
+var DBPort string
+var DBUser string
+var DBPass string
 
-var Database map[string]*mgo.Session
+var Database *mgo.Session
 
 var e *echo.Echo
 
 func getArgs(args []string) (string, string, string, string, string) {
 
 	// Set default configuration values
-	appPort := "8000"
-	dbHost := "localhost"
-	dbPort := "27017"
-	dbUser := ""
-	dbPass := ""
+	AppPort := "8000"
+	DBHost := "localhost"
+	DBPort := "27017"
+	DBUser := ""
+	DBPass := ""
 
 	switch argsCount := len(args); argsCount {
 	case 1:
 		// There was 1 argument passed, use it as
 		// the port for the app to listen to
 		if res, err := isUsablePort(args[0]); res {
-			appPort = args[0]
+			AppPort = args[0]
 		} else {
 			panic("\"" + args[0] + "\" can't be used as a port number: " + err)
 		}
@@ -41,57 +41,57 @@ func getArgs(args []string) (string, string, string, string, string) {
 	case 2:
 		// There were 2 arguments passed
 		// Use them as DB username and password
-		dbUser = args[0]
-		dbPass = args[1]
+		DBUser = args[0]
+		DBPass = args[1]
 
 	case 3:
 		// There were 3 arguments passed
 		// Use them as App Port, DB Username and Password
 		if res, err := isUsablePort(args[0]); res {
-			appPort = args[0]
+			AppPort = args[0]
 		} else {
 			panic("\"" + args[0] + "\" can't be used as a port number: " + err)
 		}
 
-		dbUser = args[1]
-		dbPass = args[2]
+		DBUser = args[1]
+		DBPass = args[2]
 
 	case 4:
 		// There were 4 arguments passed
 		// Use them as App Port, DB Username, Password and Hostname/IP
 		if res, err := isUsablePort(args[0]); res {
-			appPort = args[0]
+			AppPort = args[0]
 		} else {
 			panic("\"" + args[0] + "\" can't be used as a port number: " + err)
 		}
 
-		dbHost = args[3]
-		dbUser = args[1]
-		dbPass = args[2]
+		DBHost = args[3]
+		DBUser = args[1]
+		DBPass = args[2]
 
 	case 5:
 		// There were 5 arguments passed covering all configuration parameters
 		// Use them as App Port, DB Username, Password, Hostname/IP and Port
 		if res, err := isUsablePort(args[0]); res {
-			appPort = args[0]
+			AppPort = args[0]
 		} else {
 			panic("\"" + args[0] + "\" can't be used as a port number: " + err)
 		}
 
-		dbHost = args[3]
-		dbPort = args[4]
-		dbUser = args[1]
+		DBHost = args[3]
+		DBPort = args[4]
+		DBUser = args[1]
 
 		if res, err := isValidPort(args[2]); res {
-			appPort = args[2]
+			AppPort = args[2]
 		} else {
 			panic("\"" + args[2] + "\" can't be used as a port number: " + err)
 		}
 
-		dbPass = args[2]
+		DBPass = args[2]
 	}
 
-	return appPort, dbHost, dbPort, dbUser, dbPass
+	return AppPort, DBHost, DBPort, DBUser, DBPass
 }
 
 func Init(args []string, logLevel string, database string) {
@@ -100,18 +100,18 @@ func Init(args []string, logLevel string, database string) {
 
 	Log.Info("Initializing Goctapus...")
 
-	appPort, dbHost, dbPort, dbUser, dbPass = getArgs(args[1:])
+	AppPort, DBHost, DBPort, DBUser, DBPass = getArgs(args[1:])
 
 	Log.WithFields(Log.Fields{
-		"appPort": appPort,
-		"dbHost":  dbHost,
-		"dbPort":  dbPort,
-		"dbUser":  dbUser,
-		"dbPass":  dbPass,
+		"AppPort": AppPort,
+		"DBHost":  DBHost,
+		"DBPort":  DBPort,
+		"DBUser":  DBUser,
+		"DBPass":  DBPass,
 	}).Debug("Current server configuration:")
 
 	// Databases = make(map[string]*sql.DB)
-	ConnectDB(dbHost, dbPort, database, dbUser, dbPass)
+	// ConnectDB(DBHost, DBPort, database, DBUser, DBPass)
 
 	e = echo.New()
 
@@ -120,7 +120,7 @@ func Init(args []string, logLevel string, database string) {
 
 func Start() {
 	Log.Info("Starting up web server...")
-	e.Start(":" + appPort)
+	e.Start(":" + AppPort)
 	Log.Debug("Web Server started succesfully.")
 }
 
