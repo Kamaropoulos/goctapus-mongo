@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Kamaropoulos/goctapus/models"
+	"github.com/Kamaropoulos/goctapus-mongo/models"
 
 	"github.com/labstack/echo"
 )
