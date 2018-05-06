@@ -23,7 +23,7 @@ type TaskCollection struct {
 
 // GetTasks from the DB
 func GetTasks() TaskCollection {
-	database := goctapus.ConnectDB(goctapus.DBHost)
+	database := goctapus.ConnectDB(goctapus.Config)
 	defer database.Close()
 	c := database.DB("goapp").C("tasks")
 	result := TaskCollection{}
@@ -38,7 +38,7 @@ func GetTasks() TaskCollection {
 
 // PutTask into DB
 func PutTask(name string) (string, error) {
-	database := goctapus.ConnectDB(goctapus.DBHost)
+	database := goctapus.ConnectDB(goctapus.Config)
 	defer database.Close()
 	c := database.DB("goapp").C("tasks")
 	task := Task{ID: bson.NewObjectId(), Name: name}
@@ -51,7 +51,7 @@ func PutTask(name string) (string, error) {
 
 // DeleteTask from DB
 func DeleteTask(id string) (int64, error) {
-	database := goctapus.ConnectDB(goctapus.DBHost)
+	database := goctapus.ConnectDB(goctapus.Config)
 	defer database.Close()
 	c := database.DB("goapp").C("tasks")
 	err := c.RemoveId(bson.ObjectIdHex(id))

@@ -95,7 +95,7 @@ func getArgs(args []string) Configuration {
 		dbPass = args[2]
 	}
 
-	conf := Configuration{appPort, dbHost, dbPort, dbUser, dbPass}
+	conf := Configuration{appPort: appPort, dbHost: dbHost, dbPort: dbPort, dbUser: dbUser, dbPass: dbPass}
 
 	return conf
 }
