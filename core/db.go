@@ -2,6 +2,7 @@ package goctapus
 
 import (
 	"database/sql"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	mgo "gopkg.in/mgo.v2"
@@ -26,8 +27,19 @@ func InitDB(dbString string) *sql.DB {
 	return db
 }
 
-func ConnectDB(host string) *mgo.Session {
-	db, err := mgo.Dial(host)
+func ConnectDB(config Configuration) *mgo.Session {
+	// db, err := mgo.Dial(config.dbHost)
+
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{config.dbHost + ":" + config.dbPort},
+		Timeout:  60 * time.Second,
+		Database: "",
+		Username: config.dbUser,
+		Password: config.dbPass,
+	}
+
+	db, err := mgo.DialWithInfo(mongoDBDialInfo)
+
 	if err != nil {
 		Log.Fatal("CreateSession: %s\n", err)
 	}
