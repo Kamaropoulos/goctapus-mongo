@@ -1,4 +1,4 @@
-package goctapus-mongo
+package goctapusmongo
 
 import (
 	"database/sql"
